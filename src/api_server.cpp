@@ -6,6 +6,8 @@
 #include "config.h"
 #include "globals.h"
 #include "web_page.h"
+#include "relay_control.h"
+#include "safety.h"
 
 static void sendJson(int code, const String& body) {
   server.sendHeader("Access-Control-Allow-Origin", "*");
@@ -29,8 +31,13 @@ static String statusJson() {
   ap["clients"] = WiFi.softAPgetStationNum();
 
   JsonObject hvac = doc["hvac"].to<JsonObject>();
-  hvac["ready"] = false;
-  hvac["message"] = "Relay and sensor layers not enabled yet.";
+  hvac["ready"] = !startupSafetyActive();
+  hvac["message"] = startupSafetyActive()
+    ? "Startup safety delay active."
+    : "Relay safety layer ready. Control endpoints not enabled yet.";
+
+  appendSafetyJson(doc);
+  appendRelayJson(doc);
 
   String out;
   serializeJson(doc, out);

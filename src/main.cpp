@@ -4,6 +4,8 @@
 #include "globals.h"
 #include "wifi_manager.h"
 #include "api_server.h"
+#include "relay_control.h"
+#include "safety.h"
 
 void setup() {
   Serial.begin(115200);
@@ -15,11 +17,20 @@ void setup() {
   pinMode(STATUS_LED_PIN, OUTPUT);
   digitalWrite(STATUS_LED_PIN, LOW);
 
+  setupSafety();
+
+  bool relayOk = setupRelays();
+  if (!relayOk) {
+    lastMode = "fault";
+  }
+
   setupWifiAp();
   setupRoutes();
   server.begin();
 
-  lastMode = "setup_ap";
+  if (relayOk) {
+    lastMode = "setup_ap";
+  }
 
   Serial.println();
   Serial.println("Orion Standalone HVAC Controller");
@@ -35,6 +46,7 @@ void setup() {
 void loop() {
   handleWifi();
   server.handleClient();
+  updateSafety();
 
   static unsigned long lastBlink = 0;
   static bool led = false;
