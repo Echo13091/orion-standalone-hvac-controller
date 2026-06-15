@@ -1,0 +1,8 @@
+.pio/
+.vscode/
+.DS_Store
+*.log
+*.tmp
+*.bak
+secrets.h
+wifi_secrets.h
